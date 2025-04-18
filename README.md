@@ -21,8 +21,6 @@ The aim is to offer a user-friendly platform that processes local air quality da
 
 ```http
 GET /api/v1/data                  # Retrieve air quality data
-GET /api/v1/data/export?format=csv
-GET /api/v1/forecast              # Forecast values (ML model)
 ```
 
 > Detailed API documentation available at `/docs` (Swagger UI with FastAPI)
