@@ -13,13 +13,13 @@ import java.util.List;
 @Data
 public class DataRequest {
 
-    @NotBlank(message = "Station must not be blank")
-    @Schema(example = "Graz-Süd", description = "Measurement station name")
-    private String station;
+    @NotNull(message = "Station must not be blank")
+    @Schema(example = "164", description = "Measurement station id")
+    private Integer station;
 
     @NotEmpty(message = "At least one component must be provided")
-    @Schema(example = "[\"NO2\", \"O3\"]", description = "List of components to retrieve")
-    private List<String> components;
+    @Schema(example = "[\"125\", \"8\"]", description = "List of component ids to retrieve")
+    private List<Integer> components;
 
     @NotNull(message = "Start date is required")
     @Schema(example = "2025-01-01", description = "Start date in ISO format (yyyy-MM-dd)")

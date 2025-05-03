@@ -2,8 +2,9 @@ package at.luis_v2.luis_v2_backend.controller;
 
 import at.luis_v2.luis_v2_backend.dto.DataRequest;
 import at.luis_v2.luis_v2_backend.service.DataService;
+import at.luis_v2.luis_v2_backend.utils.FileFormatUtils;
 import jakarta.validation.Valid;
-import org.springframework.core.io.InputStreamResource;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.ByteArrayInputStream;
 
 @RestController
 @RequestMapping("/api/data")
@@ -25,22 +24,37 @@ public class DataController {
     }
 
     @PostMapping
-    public ResponseEntity<InputStreamResource> getData(@Valid @RequestBody DataRequest request) {
+    public ResponseEntity<String> getData(@Valid @RequestBody DataRequest request) {
+        try {
 
-        ByteArrayInputStream dataStream = dataService.generateData(request);
-        String fileType = request.getFileFormat().toLowerCase();
+            String fileType = request.getFileFormat().toLowerCase();
 
-        MediaType mediaType = switch (fileType) {
-            case "csv" -> MediaType.parseMediaType("text/csv");
-            case "json" -> MediaType.APPLICATION_JSON;
-            default -> MediaType.APPLICATION_OCTET_STREAM;
-        };
+            switch (fileType) {
+                case "csv":
+                    return ResponseEntity
+                        .ok()
+                        .contentType(MediaType.parseMediaType("text/csv"))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=airdata.csv")
+                        .body(FileFormatUtils.exportFlatCsv(dataService.getData(request)));
+            
+                case "json":
+                    return ResponseEntity
+                        .ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(FileFormatUtils.exportFlatJson(dataService.getData(request)));
 
-        String filename = "airdata." + fileType;
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(mediaType)
-                .body(new InputStreamResource(dataStream));
+                default:
+                    return ResponseEntity
+                        .badRequest()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"error\": \"Unsupported file format. Supported formats are: csv, json.\"}");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                .internalServerError()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{\"error\": \"An error occurred while processing the request.\"}");
+        }
     }
 }
