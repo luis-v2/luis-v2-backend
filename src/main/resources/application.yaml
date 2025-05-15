@@ -15,3 +15,7 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
+
+luis:
+  export-url: "https://app.luis.steiermark.at/luft2/export.php"
+  scrape-url: "https://app.luis.steiermark.at/luft2/suche.php"
