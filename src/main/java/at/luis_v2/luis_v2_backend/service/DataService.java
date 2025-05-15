@@ -1,5 +1,6 @@
 package at.luis_v2.luis_v2_backend.service;
 
+import at.luis_v2.luis_v2_backend.components.LuisConfig;
 import at.luis_v2.luis_v2_backend.dto.DataComponent;
 import at.luis_v2.luis_v2_backend.dto.DataPoint;
 import at.luis_v2.luis_v2_backend.dto.DataRequest;
@@ -37,10 +38,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class DataService {
 
     private final WebClient webClient;
+    private final LuisConfig config;
 
     @Autowired
-    public DataService(WebClient.Builder webClientBuilder) {
+    public DataService(WebClient.Builder webClientBuilder, LuisConfig config) {
         this.webClient = webClientBuilder.build();
+        this.config = config;
     }
 
     public List<DataComponent> getData(DataRequest request) {
@@ -69,7 +72,7 @@ public class DataService {
 
             request.getComponents().forEach(component -> {
                 try {
-                    URIBuilder uriBuilder = new URIBuilder("https://app.luis.steiermark.at/luft2/export.php")
+                    URIBuilder uriBuilder = new URIBuilder(config.getExportUrl())
                         .addParameter("station1", String.valueOf(request.getStation()))
                         .addParameter("komponente1", component.toString())
                         .addParameter("von_tag", String.valueOf(startDate.getDayOfMonth()))
