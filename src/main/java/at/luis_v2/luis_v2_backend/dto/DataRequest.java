@@ -29,9 +29,9 @@ public class DataRequest {
     @Schema(example = "2025-01-31", description = "End date in ISO format (yyyy-MM-dd)")
     private LocalDate endDate;
 
-    @NotBlank(message = "Interval must be specified")
-    @Schema(example = "daily", description = "Interval of the data (e.g., half-hourly, hourly, daily)")
-    private String interval;
+    @NotNull(message = "Average id must be specified")
+    @Schema(example = "1", description = "Id of the average to be used")
+    private int average;
 
     @NotNull
     @Schema(example = "false", description = "Should the data be interpolated?")
