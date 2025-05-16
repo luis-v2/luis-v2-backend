@@ -81,7 +81,7 @@ public class DataService {
                         .addParameter("bis_tag", String.valueOf(endDate.getDayOfMonth()))
                         .addParameter("bis_monat", String.valueOf(endDate.getMonthValue()))
                         .addParameter("bis_jahr", String.valueOf(endDate.getYear()))
-                        .addParameter("mittelwert", "1"); // TODO: add all
+                        .addParameter("mittelwert", String.valueOf(request.getAverage()));
                     
                     requestData.add(Tuples.of(component, uriBuilder.build().toString()));
                 } catch (Exception e) {
