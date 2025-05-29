@@ -52,7 +52,7 @@ public class DataService {
         List<LocalDate[]> dateBlocks = new ArrayList<>();
 
         LocalDate currentStartDate = request.getStartDate();
-        while (currentStartDate.isBefore(request.getEndDate())) {
+        while (currentStartDate.isBefore(request.getEndDate()) || currentStartDate.equals(request.getEndDate())) {
             LocalDate currentEndDate = currentStartDate.plusDays(59);
 
             if (currentEndDate.isAfter(request.getEndDate())) {
@@ -61,6 +61,8 @@ public class DataService {
             dateBlocks.add(new LocalDate[] {currentStartDate, currentEndDate});
 
             currentStartDate = currentEndDate.plusDays(1);
+
+            if (currentStartDate.equals(request.getEndDate())) break;
         }
 
         // Build the API request URL for each date block
