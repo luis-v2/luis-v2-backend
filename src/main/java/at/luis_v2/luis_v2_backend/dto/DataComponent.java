@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataComponent {
     public Integer id;
-    public String name;
+    public String name = "";
     public String unit;
     public List<DataPoint> dataPoints;
 }
