@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -123,15 +124,17 @@ public class DataService {
             for (DataComponent component : mergedComponents) {
                 List<Forecast> forecasts = forecastRepository.findByStationAndComponentAndTimestampBetween(
                         String.valueOf(request.getStation()), // ACHTUNG: station als String
-                        component.getName(),      // oder getComponent(), falls vorhanden
+                        component.getId().toString(),      // oder getComponent(), falls vorhanden
                         request.getEndDate().atStartOfDay(),
                         request.getEndDate().plusDays(2).atTime(23, 59)
                 );
 
+                System.out.println("Found " + forecasts.size() + " forecasts for component: " + component.getName());
+
                 if (!forecasts.isEmpty()) {
                     List<DataPoint> forecastPoints = forecasts.stream()
                             .map(f -> new DataPoint(
-                                    f.getTimestamp().toInstant(null),
+                                    f.getTimestamp().toInstant(ZoneOffset.UTC),
                                     Double.parseDouble(f.getValue())
                             ))
                             .toList();
