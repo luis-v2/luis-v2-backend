@@ -4,6 +4,8 @@ import at.luis_v2.luis_v2_backend.components.LuisConfig;
 import at.luis_v2.luis_v2_backend.dto.DataComponent;
 import at.luis_v2.luis_v2_backend.dto.DataPoint;
 import at.luis_v2.luis_v2_backend.dto.DataRequest;
+import at.luis_v2.luis_v2_backend.dto.Forecast;
+import at.luis_v2.luis_v2_backend.repository.ForecastRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -19,12 +21,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -39,11 +39,13 @@ public class DataService {
 
     private final WebClient webClient;
     private final LuisConfig config;
+    private final ForecastRepository forecastRepository;
 
     @Autowired
-    public DataService(WebClient.Builder webClientBuilder, LuisConfig config) {
+    public DataService(WebClient.Builder webClientBuilder, LuisConfig config, ForecastRepository forecastRepository) {
         this.webClient = webClientBuilder.build();
         this.config = config;
+        this.forecastRepository = forecastRepository;
     }
 
     public List<DataComponent> getData(DataRequest request) {
@@ -117,6 +119,30 @@ public class DataService {
         for (Map.Entry<Integer, List<DataComponent>> entry : dataComponentsGroupedById.entrySet()) {
             DataComponent mergedComponent = mergeDataComponents(entry.getValue());
             mergedComponents.add(mergedComponent);
+        }
+        if (request.isAddForecasts() && !mergedComponents.isEmpty()) {
+            for (DataComponent component : mergedComponents) {
+                List<Forecast> forecasts = forecastRepository.findByStationAndComponentAndTimestampBetween(
+                        String.valueOf(request.getStation()), // ACHTUNG: station als String
+                        component.getId().toString(),      // oder getComponent(), falls vorhanden
+                        request.getEndDate().atStartOfDay(),
+                        request.getEndDate().plusDays(2).atTime(23, 59)
+                );
+
+                System.out.println("Found " + forecasts.size() + " forecasts for component: " + component.getName());
+
+                if (!forecasts.isEmpty()) {
+                    List<DataPoint> forecastPoints = forecasts.stream()
+                            .map(f -> new DataPoint(
+                                    f.getTimestamp().toInstant(ZoneOffset.UTC),
+                                    Double.parseDouble(f.getValue())
+                            ))
+                            .toList();
+
+                    component.dataPoints.addAll(forecastPoints);
+                    component.dataPoints.sort(Comparator.comparing(DataPoint::getTimestamp));
+                }
+            }
         }
 
         return mergedComponents;

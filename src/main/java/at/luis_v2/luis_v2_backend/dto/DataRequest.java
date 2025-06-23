@@ -37,6 +37,10 @@ public class DataRequest {
     @Schema(example = "false", description = "Should the data be interpolated?")
     private boolean interpolate;
 
+    @NotNull
+    @Schema(example = "false", description = "Should Forecasts be added?")
+    private boolean addForecasts;
+
     @NotBlank(message = "Format must be specified")
     @Schema(example = "csv", description = "Format of the exported data")
     private String fileFormat;
