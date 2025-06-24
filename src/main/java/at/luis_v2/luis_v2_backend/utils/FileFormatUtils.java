@@ -1,11 +1,6 @@
 package at.luis_v2.luis_v2_backend.utils;
 
 import java.io.File;
-import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -31,10 +26,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import at.luis_v2.luis_v2_backend.dto.DataComponent;
 import at.luis_v2.luis_v2_backend.dto.DataPoint;
-
-
-
-
 
 
 public class FileFormatUtils {

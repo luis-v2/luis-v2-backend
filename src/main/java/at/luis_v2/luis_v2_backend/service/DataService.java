@@ -6,6 +6,7 @@ import at.luis_v2.luis_v2_backend.dto.DataPoint;
 import at.luis_v2.luis_v2_backend.dto.DataRequest;
 import at.luis_v2.luis_v2_backend.dto.Forecast;
 import at.luis_v2.luis_v2_backend.repository.ForecastRepository;
+import at.luis_v2.luis_v2_backend.utils.ValueUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -33,6 +34,7 @@ import org.apache.poi.hssf.extractor.OldExcelExtractor;
 import org.apache.http.client.utils.URIBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.reactive.function.client.WebClient;
+
 
 @Service
 public class DataService {
@@ -120,13 +122,14 @@ public class DataService {
             DataComponent mergedComponent = mergeDataComponents(entry.getValue());
             mergedComponents.add(mergedComponent);
         }
+
         if (request.isAddForecasts() && !mergedComponents.isEmpty()) {
             for (DataComponent component : mergedComponents) {
                 List<Forecast> forecasts = forecastRepository.findByStationAndComponentAndTimestampBetween(
                         String.valueOf(request.getStation()), // ACHTUNG: station als String
                         component.getId().toString(),      // oder getComponent(), falls vorhanden
-                        request.getEndDate().atStartOfDay(),
-                        request.getEndDate().plusDays(2).atTime(23, 59)
+                        component.dataPoints.getLast().timestamp.atZone(ZoneOffset.UTC).toLocalDateTime(),
+                        request.getEndDate().atTime(23, 59)
                 );
 
                 System.out.println("Found " + forecasts.size() + " forecasts for component: " + component.getName());
@@ -135,7 +138,7 @@ public class DataService {
                     List<DataPoint> forecastPoints = forecasts.stream()
                             .map(f -> new DataPoint(
                                     f.getTimestamp().toInstant(ZoneOffset.UTC),
-                                    Double.parseDouble(f.getValue())
+                                    ValueUtils.parseWithMaxDecimals(f.getValue(), 8)
                             ))
                             .toList();
 
