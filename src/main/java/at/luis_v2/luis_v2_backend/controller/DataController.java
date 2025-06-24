@@ -5,6 +5,9 @@ import at.luis_v2.luis_v2_backend.service.DataService;
 import at.luis_v2.luis_v2_backend.utils.FileFormatUtils;
 import jakarta.validation.Valid;
 
+import java.io.File;
+import java.nio.file.Files;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +27,7 @@ public class DataController {
     }
 
     @PostMapping
-    public ResponseEntity<String> getData(@Valid @RequestBody DataRequest request) {
+    public ResponseEntity<?> getData(@Valid @RequestBody DataRequest request) {
         try {
 
             String fileType = request.getFileFormat().toLowerCase();
@@ -43,6 +46,17 @@ public class DataController {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(FileFormatUtils.exportFlatJson(dataService.getData(request)));
 
+                case "parquet":
+                    // Parquet file temporär erzeugen
+                    File parquetFile = FileFormatUtils.exportParquetToTempFile(dataService.getData(request));
+                    byte[] parquetBytes = Files.readAllBytes(parquetFile.toPath());
+                    parquetFile.delete();
+
+                    return ResponseEntity
+                        .ok()
+                        .contentType(MediaType.parseMediaType("application/octet-stream"))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=airdata.parquet")
+                        .body(parquetBytes);
                 default:
                     return ResponseEntity
                         .badRequest()
